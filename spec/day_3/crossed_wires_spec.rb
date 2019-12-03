@@ -88,4 +88,17 @@ RSpec.describe CrossedWires do
     end
   end
 
+  describe '#steps_to_intersections' do
+    it 'returns steps to get to a node for each wire as an array' do
+      steps_arr = crossed_wires.steps_to_intersections
+      expect(steps_arr).to include [15, 15]
+      expect(steps_arr).to include [20, 20]
+    end
+  end
+
+  describe '#shortest_wires' do
+    it 'returns minimum number of steps to intersection' do
+      expect(crossed_wires.shortest_wires).to eq 30
+    end
+  end
 end
