@@ -22,28 +22,69 @@ RSpec.describe CrossedWires do
 
   describe '#movement' do
     it 'returns an array describing +x movement' do
-      expect(crossed_wires.movement('R3')).to eq [3, 0]
+      expect(crossed_wires.movement('R3')).to eq [3, 1, 1]
     end
 
     it 'returns an array describing -x movement' do
-      expect(crossed_wires.movement('L7')).to eq [-7, 0]
+      expect(crossed_wires.movement('L5')).to eq [5, 1, -1]
     end
 
     it 'returns an array describing +y movement' do
-      expect(crossed_wires.movement('U450')).to eq [0, 450]
+      expect(crossed_wires.movement('U6')).to eq [1, 6, 1]
     end
 
     it 'returns an array describing -y movement' do
-      expect(crossed_wires.movement('D17')).to eq [0, -17]
+      expect(crossed_wires.movement('D4')).to eq [1, 4, -1]
     end
   end
 
-  describe '#new_node' do
+  describe '#new_nodes' do
     it 'creates next node given original node and movement' do
-      expect(crossed_wires.new_node([27, -49], 'U9')).to eq [27, -40]
-      expect(crossed_wires.new_node([-32, -2], 'L970')).to eq [-1002, -2]
-      expect(crossed_wires.new_node([0, 0], 'D43')).to eq [0, -43]
-      expect(crossed_wires.new_node([14, 7], 'R62')).to eq [76, 7]
+      expect(crossed_wires.new_nodes([1, -3], 'U4'))
+        .to eq [[1, -2], [1, -1], [1, 0], [1, 1]]
+      expect(crossed_wires.new_nodes([55, 3], 'D3'))
+        .to eq [[55, 2], [55, 1], [55, 0]]
+      expect(crossed_wires.new_nodes([-20, -4], 'L10'))
+        .to eq [[-21, -4], [-22, -4], [-23, -4], [-24, -4], [-25, -4],
+                [-26, -4], [-27, -4], [-28, -4], [-29, -4], [-30, -4]]
+      expect(crossed_wires.new_nodes([-4, 4], 'R1'))
+        .to eq [[-4, 5]]
+    end
+  end
+
+  describe '#build_nodes' do
+    it 'creates array of nodes that make up wire path for wire 1' do
+      start_node_array = crossed_wires.nodes_1
+      path = crossed_wires.path_1
+      nodes = crossed_wires.build_nodes(start_node_array, path)
+      expect(nodes).to eq [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0],
+        [6, 0], [7, 0], [8, 0], [8, 1], [8, 2], [8, 3], [8, 4], [8, 5],
+        [7, 5], [6, 5], [5, 5], [4, 5], [3, 5], [3, 4], [3, 3], [3, 2]]
+    end
+
+    it 'creates array of nodes that make up wire path for wire 2' do
+      start_node_array = crossed_wires.nodes_2
+      path = crossed_wires.path_2
+      nodes = crossed_wires.build_nodes(start_node_array, path)
+      expect(nodes).to eq [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5],
+        [0, 6], [0, 7], [1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [6, 7], [6, 6],
+        [6, 5], [6, 4], [6, 3], [5, 3], [4, 3], [3, 3], [2, 3]]
+    end
+  end
+
+  describe '#node_intersections' do
+    it 'finds intersections of two arrays' do
+      intersections = crossed_wires.node_intersections
+      expect(intersections).to include [6, 5]
+      expect(intersections).to include [3, 3]
+      expect(intersections).to_not include [0, 0]
+    end
+  end
+
+  describe '#manhattan_distance' do
+    it 'finds the Manhattan distance of two wires' do
+      distance = crossed_wires.manhattan_distance
+      expect(distance).to eq 6
     end
   end
 
