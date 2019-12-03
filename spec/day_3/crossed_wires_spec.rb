@@ -39,7 +39,7 @@ RSpec.describe CrossedWires do
   end
 
   describe '#new_nodes' do
-    it 'creates next node given original node and movement' do
+    it 'creates new nodes given starting node and movement' do
       expect(crossed_wires.new_nodes([1, -3], 'U4'))
         .to eq [[1, -2], [1, -1], [1, 0], [1, 1]]
       expect(crossed_wires.new_nodes([55, 3], 'D3'))
