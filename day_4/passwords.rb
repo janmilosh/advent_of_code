@@ -7,6 +7,22 @@ class Passwords
     @min = range.split('-').first.to_i
   end
 
+  def number_of_passwords_no_matching_group
+    find_possible_pwds_no_matching_group.size
+  end
+
+  def find_possible_pwds_no_matching_group
+    pwds = find_possible_pwds
+    pwds.select! { |pwd| double_not_in_matching_group(pwd) }
+    pwds
+  end
+
+  def double_not_in_matching_group(pwd)
+    groups = scan_for_double_or_more(pwd)
+    groups.select! { |item| item.length == 2 }
+    groups.any?
+  end
+
   def number_of_passwords
     find_possible_pwds.size
   end
@@ -39,17 +55,24 @@ class Passwords
   end
 
   def check_double(num)
-    nums = num_arry(num)
-    (nums.size - 1).times do |i|
-      return true if nums[i] == nums[i+1]
-    end
-    false
+    scan_for_double_or_more(num).any?
   end
 
   def num_arry(num)
     num.to_s.split('').map { |e| e.to_i }
   end
+
+  def scan_for_double_or_more(num)
+    double_or_more_arr = []
+    str = num.to_s
+    (0..9).each do |n|
+      double_or_more_arr << str.scan((/#{n}{2,}/))
+    end
+    double_or_more_arr.flatten
+  end
 end
 
-# puts Passwords.new('353096-843212').number_of_passwords
-#579
+puts Passwords.new('353096-843212').number_of_passwords
+# 579
+puts Passwords.new('353096-843212').number_of_passwords_no_matching_group
+# 358

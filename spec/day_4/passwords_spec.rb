@@ -80,4 +80,37 @@ RSpec.describe Passwords do
       expect(passwords.number_of_passwords).to eq 11
     end
   end
+
+  describe '#scan_for_double_or_more' do
+    it 'returns an array of number strings that are at least 2 char long' do
+      expect(passwords.scan_for_double_or_more(123333)). to eq ['3333']
+      expect(passwords.scan_for_double_or_more(1223334444)).to eq ['22',
+        '333', '4444']
+    end
+  end
+
+  describe '#double_not_in_matching_group' do
+    it 'returns true if double is not part of a matching group' do
+      expect(passwords.double_not_in_matching_group(123344)).to be true
+      expect(passwords.double_not_in_matching_group(366777)).to be true
+      expect(passwords.double_not_in_matching_group(337777)).to be true
+    end
+
+    it 'returns false if double is part of a matching group' do
+      expect(passwords.double_not_in_matching_group(3333333)).to be false
+      expect(passwords.double_not_in_matching_group(1112525274)).to be false
+    end
+  end
+
+  describe '#find_possible_pwds_no_larger_group' do
+    it 'returns the correct list of passwords' do
+      expect(passwords.find_possible_pwds_no_matching_group).to eq [111122]
+    end
+  end
+
+  describe '#number_of_passwords_no_larger_group' do
+    it 'returns the correct number of passwords' do
+      expect(passwords.number_of_passwords_no_matching_group).to eq 1
+    end
+  end
 end
