@@ -72,7 +72,7 @@ class Passwords
   end
 end
 
-puts Passwords.new('353096-843212').number_of_passwords
+# puts Passwords.new('353096-843212').number_of_passwords
 # 579
-puts Passwords.new('353096-843212').number_of_passwords_no_matching_group
+# puts Passwords.new('353096-843212').number_of_passwords_no_matching_group
 # 358
