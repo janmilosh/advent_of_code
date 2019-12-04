@@ -1,14 +1,14 @@
 require 'pry'
 
 class CrossedWires
-  attr_reader :input_data, :path_1, :path_2
-  attr_accessor :nodes_1, :nodes_2, :node_steps_1, :node_steps_2
+  attr_reader :input_data, :path_1, :path_2, :origin_1, :origin_2
+  attr_accessor :node_steps_1, :node_steps_2
 
   def initialize(data_file)
     data_file = data_file
     @input_data = File.read(data_file).strip.split
     @path_1, @path_2 = input_data[0].split(','), input_data[1].split(',')
-    @nodes_1, @nodes_2 = [[0, 0]], [[0, 0]]
+    @origin_1, @origin_2 = [[0, 0]], [[0, 0]]
     @node_steps_1 = nil
     @node_steps_2 = nil
   end
@@ -28,11 +28,11 @@ class CrossedWires
   end
 
   def node_steps_1
-    @node_steps_1 ||= build_nodes(nodes_1, path_1)
+    @node_steps_1 ||= build_nodes(origin_1, path_1)
   end
 
   def node_steps_2
-    @node_steps_2 ||= build_nodes(nodes_2, path_2)
+    @node_steps_2 ||= build_nodes(origin_2, path_2)
   end
 
   def steps_to_intersections
