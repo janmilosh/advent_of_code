@@ -27,41 +27,70 @@ class Intcode2
     puts "#{pointer}: #{diagnostic_code}"
   end
 
+  def process_opcode_1(instruction, p1, p2, p3)
+    if p1 == 0
+      p1_value = data_array[instruction[1]]
+    else
+      p1_value = data_array[pointer + 1]
+    end
+    if p2 == 0
+      p2_value = data_array[instruction[2]]
+    else
+      p2_value = data_array[pointer + 2]
+    end
+    value = p1_value + p2_value
+    if p3 == 0
+      data_array[instruction[3]] = value
+    else
+      data_array[pointer + 3] = value
+    end
+    @pointer += instruction.length
+  end
+
+  def process_opcode_2(instruction, p1, p2, p3)
+    if p1 == 0
+      p1_value = data_array[instruction[1]]
+    else
+      p1_value = data_array[pointer + 1]
+    end
+    if p2 == 0
+      p2_value = data_array[instruction[2]]
+    else
+      p2_value = data_array[pointer + 2]
+    end
+    value = p1_value * p2_value
+    if p3 == 0
+      data_array[instruction[3]] = value
+    else
+      data_array[pointer + 3] = value
+    end
+    @pointer += instruction.length
+  end
+
+  def process_opcode_3(instruction)
+    data_array[instruction[1]] = input
+    @pointer += instruction.length
+  end
+
+  def process_opcode_4(instruction, p1)
+    if p1 == 0
+      output(data_array[instruction[1]])
+    else
+      output(data_array[pointer + 1])
+    end
+    @pointer += instruction.length
+  end
+
   def process(instruction, code_hash)
     opcode = code_hash[:opcode]
     p1 = code_hash[:p1]
     p2 = code_hash[:p2]
     p3 = code_hash[:p3]
-    if opcode == 3
-      data_array[instruction[1]] = input
-    elsif opcode == 4
-      if p1 == 0
-        output(data_array[instruction[1]])
-      else
-        output(data_array[pointer + 1])
-      end
-    else
-      if p1 == 0
-        p1_value = data_array[instruction[1]]
-      else
-        p1_value = data_array[pointer + 1]
-      end
-      if p2 == 0
-        p2_value = data_array[instruction[2]]
-      else
-        p2_value = data_array[pointer + 2]
-      end
-      if opcode == 1
-        value = p1_value + p2_value
-      else
-        value = p1_value * p2_value
-      end
-      if p3 == 0
-        data_array[instruction[3]] = value
-      else
-        data_array[pointer + 3] = value
-      end
-    end
+
+    process_opcode_1(instruction, p1, p2, p3) if opcode == 1
+    process_opcode_2(instruction, p1, p2, p3) if opcode == 2
+    process_opcode_3(instruction) if opcode == 3
+    process_opcode_4(instruction, p1) if opcode == 4
   end
 
   def step
@@ -72,7 +101,6 @@ class Intcode2
     l = instruction_length(opcode)
     instruction = instruction_array(l)
     process(instruction, code_hash)
-    @pointer += l
   end
 
   def instruction_array(length)
@@ -95,4 +123,4 @@ class Intcode2
   end
 end
 
-Intcode2.new('./day_5/data/input').run
+# Intcode2.new('./day_5/data/input').run
