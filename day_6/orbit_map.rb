@@ -1,26 +1,12 @@
 require 'pry'
 
 class OrbitMap
-  attr_reader :raw_data_array, :data_array, :data_hash, :node_hash
+  attr_reader :raw_data_array, :data_array, :data_hash
 
   def initialize(data_file)
     @raw_data_array = File.read(data_file).strip.split
     @data_array = raw_data_array.map { |e| e.split(')') }
-    @node_hash = parse_node_hash
     @data_hash = parse_data
-
-  end
-
-  def parse_node_hash
-    h = {}
-    data_array.each do |e|
-      if h.has_key? e[0]
-        h[e[0]] << e[1]
-      else
-        h[e[0]] = [e[1]]
-      end
-    end
-    h
   end
 
   def parse_data
@@ -29,6 +15,28 @@ class OrbitMap
       h[e[1]] = e[0]
     end
     h
+  end
+
+  def minimum_orbital_transfers
+    san_array = trace_map('SAN')
+    you_array = trace_map('YOU')
+    common = san_array & you_array
+    san_length = (san_array - common).length
+    you_length = (you_array - common).length
+    san_length + you_length - 2
+  end
+
+  def trace_map(value)
+    arr = []
+    while true
+      arr << value
+      if data_hash.has_key? value
+        value = data_hash[value]
+      else
+        break
+      end
+    end
+    arr
   end
 
   def walk_map
@@ -48,3 +56,4 @@ class OrbitMap
 end
 
 # puts OrbitMap.new('./day_6/data/input').walk_map
+# puts OrbitMap.new('./day_6/data/input').minimum_orbital_transfers
