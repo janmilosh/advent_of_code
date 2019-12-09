@@ -11,7 +11,7 @@ class Thrust
   def optimize
     max_signal = 0
     (1234..43210).each do |num|
-      phase_settings = phase_settings_array(num)
+      phase_settings = phase_settings_array(num, [0, 1, 2, 3, 4])
       if phase_settings
         input_signal = 0
         phase_settings.each do |phase_setting|
@@ -29,9 +29,50 @@ class Thrust
     return max_signal
   end
 
-  def phase_settings_array(num)
+  def optimize_loop
+    max_signal = 0
+    (56789..98765).each do |num|
+      phase_settings = phase_settings_array(num, [5, 6, 7, 8, 9])
+      if phase_settings
+        pointer = 0
+        input_count = 0
+        output = step(pointer, phase_settings[0]) #[pointer, output] or 99
+        puts "pointer: #{pointer}, output: #{output}, input: #{phase_settings[0]}, input_count: #{input_count}"
+        count = 0
+        while count < 200
+          if output == 99
+            puts 'HALT'
+            break
+          elsif input_count <= 4 && output[1] == true
+            input_count += 1
+            input = phase_settings[input_count]
+          end
+          if output[1] == true && input_count == 5
+            input = 0
+            input_count += 1
+          elsif (output[1].is_a? Integer) && input_count > 5
+            input = output[1]
+            @output_signal = output[1]
+          end
+          pointer = output[0]
+          output = step(pointer, input)
+          puts "pointer: #{pointer}, output: #{output}, input: #{input}, input_count: #{input_count}"
+          count += 1
+        end
+      end
+
+      if @output_signal > max_signal
+        max_signal = @output_signal
+        @optimal_settings = phase_settings
+      end
+    end
+    puts "max_signal: #{max_signal}"
+    puts "optimal_settings: #{@optimal_settings}"
+    return max_signal
+  end
+
+  def phase_settings_array(num, test_arr)
     num_arr = num.to_s.rjust(5, '0').split('').map { |e| e.to_i }
-    test_arr = [0, 1, 2, 3, 4]
     return num_arr if (test_arr - num_arr).empty?
     return false
   end
