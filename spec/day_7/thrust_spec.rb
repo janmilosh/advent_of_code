@@ -13,7 +13,7 @@ RSpec.describe Thrust do
 
   describe '#instruction_array' do
     it 'returns a hash indicating opcode and modes' do
-      expect(thrust.instruction_array(4)).to eq [3, 15, 3, 16]
+      expect(thrust.instruction_array(0, 4)).to eq [3, 15, 3, 16]
     end
   end
 
@@ -34,7 +34,7 @@ RSpec.describe Thrust do
 
   describe '#optimize' do
     it 'runs the program and returns the maximum signal' do
-      expect(thrust.optimize).to eq 54321
+      expect(thrust.optimize).to eq 43210
     end
   end
 end

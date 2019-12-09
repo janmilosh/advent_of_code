@@ -1,42 +1,32 @@
 require 'pry'
 class Thrust
-  attr_accessor :data_array, :current_instruction, :pointer, :input_signal,
-    :phase_setting, :input_value, :max_signal, :optimal_settings
+  attr_accessor :data_array
   attr_reader :data_file
 
   def initialize(data_file)
     @data_file = data_file
     @data_array = File.read(data_file).strip.split(',').map { |i| i.to_i }
-    @pointer = 0
-    @input_signal = 0
-    @phase_setting = nil
-    @input_value = false
-    @max_signal = 0
-    @optimal_settings = []
   end
 
   def optimize
-    count = 0
+    max_signal = 0
     (1234..43210).each do |num|
-      @phase_settings = phase_settings_array(num)
-      if @phase_settings
-        count += 1
-        puts count
-        @phase_settings.each do |setting|
-          @phase_setting = setting
-          run
-          # puts "#{@input_signal}, #{@phase_setting} "
-
+      phase_settings = phase_settings_array(num)
+      if phase_settings
+        input_signal = 0
+        phase_settings.each do |phase_setting|
+          @output_signal = run(phase_setting, input_signal)
+          input_signal = @output_signal
         end
       end
-      if @input_signal > @max_signal
-        @max_signal = @input_signal
-        @optimal_settings = @phase_settings
+      if @output_signal > max_signal
+        max_signal = @output_signal
+        @optimal_settings = phase_settings
       end
     end
-    puts "max_signal: #{@max_signal}"
+    puts "max_signal: #{max_signal}"
     puts "optimal_settings: #{@optimal_settings}"
-    @max_signal
+    return max_signal
   end
 
   def phase_settings_array(num)
@@ -46,87 +36,81 @@ class Thrust
     return false
   end
 
-  def run
+  def run(phase_setting, input_signal)
+    input = phase_setting
+    pointer = 0
     while true
-      if step == false
+      output = step(pointer, input)
+      if output == 99
         break
+      elsif output[1] == true
+        input = input_signal
+      else
+        output_signal = output[1]
       end
+      pointer = output[0]
     end
+    output_signal
   end
 
-  def input
-    if @input_value
-      @input_value = false
-      puts "input a signal: #{@input_signal}"
-      return @input_signal
-    else
-      @input_value = true
-      puts "input a setting: #{@phase_setting}"
-      return @phase_setting
-    end
-  end
-
-  def output(diagnostic_code)
-    puts "in output: #{pointer}: #{diagnostic_code}"
-    @input_signal = diagnostic_code
-  end
-
-  def process_opcode_1(instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(instruction, p1, p2)
+  def process_opcode_1(pointer, instruction, p1, p2, p3)
+    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
     value = p1_value + p2_value
     if p3 == 0
       data_array[instruction[3]] = value
     else
       data_array[pointer + 3] = value
     end
-    @pointer += instruction.length
+    [pointer += instruction.length, false]
   end
 
-  def process_opcode_2(instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(instruction, p1, p2)
+  def process_opcode_2(pointer, instruction, p1, p2, p3)
+    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
     value = p1_value * p2_value
     if p3 == 0
       data_array[instruction[3]] = value
     else
       data_array[pointer + 3] = value
     end
-    @pointer += instruction.length
+    [pointer += instruction.length, false]
   end
 
-  def process_opcode_3(instruction)
+  def process_opcode_3(pointer, instruction, input)
     data_array[instruction[1]] = input
-    @pointer += instruction.length
+    [pointer += instruction.length, true]
   end
 
-  def process_opcode_4(instruction, p1)
+  def process_opcode_4(pointer, instruction, p1)
     if p1 == 0
-      output(data_array[instruction[1]])
+      signal = data_array[instruction[1]]
     else
-      output(data_array[pointer + 1])
+      signal = data_array[pointer + 1]
     end
-    @pointer += instruction.length
+    [pointer += instruction.length, signal]
   end
 
-  def process_opcode_5(instruction, p1, p2)
-    p1_value, p2_value = p1_p2_values(instruction, p1, p2)
+  def process_opcode_5(pointer, instruction, p1, p2)
+    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
     if p1_value != 0
-      @pointer = p2_value
+      pointer = p2_value
     else
-      @pointer += instruction.length
+      pointer += instruction.length
     end
+    [pointer, false]
   end
 
-  def process_opcode_6(instruction, p1, p2)
-    p1_value, p2_value = p1_p2_values(instruction, p1, p2)
+  def process_opcode_6(pointer, instruction, p1, p2)
+    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
     if p1_value == 0
-      @pointer = p2_value
+      pointer = p2_value
     else
-      @pointer += instruction.length
+      pointer += instruction.length
     end
+    [pointer, false]
   end
 
-  def process_opcode_7(instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(instruction, p1, p2)
+  def process_opcode_7(pointer, instruction, p1, p2, p3)
+    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
     if p1_value < p2_value
       value = 1
     else
@@ -137,11 +121,11 @@ class Thrust
     else
       data_array[pointer + 3] = value
     end
-    @pointer += instruction.length
+    [pointer += instruction.length, false]
   end
 
-  def process_opcode_8(instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(instruction, p1, p2)
+  def process_opcode_8(pointer, instruction, p1, p2, p3)
+    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
     if p1_value == p2_value
       value = 1
     else
@@ -152,10 +136,10 @@ class Thrust
     else
       data_array[pointer + 3] = value
     end
-    @pointer += instruction.length
+    [pointer += instruction.length, false]
   end
 
-  def p1_p2_values(instruction, p1, p2)
+  def p1_p2_values(pointer, instruction, p1, p2)
     if p1 == 0
       p1_value = data_array[instruction[1]]
     else
@@ -169,33 +153,43 @@ class Thrust
     return p1_value, p2_value
   end
 
-  def process(instruction, code_hash)
+  def process(pointer, instruction, code_hash, input)
     opcode = code_hash[:opcode]
     p1 = code_hash[:p1]
     p2 = code_hash[:p2]
     p3 = code_hash[:p3]
 
-    process_opcode_1(instruction, p1, p2, p3) if opcode == 1
-    process_opcode_2(instruction, p1, p2, p3) if opcode == 2
-    process_opcode_3(instruction) if opcode == 3
-    process_opcode_4(instruction, p1) if opcode == 4
-    process_opcode_5(instruction, p1, p2) if opcode == 5
-    process_opcode_6(instruction, p1, p2) if opcode == 6
-    process_opcode_7(instruction, p1, p2, p3) if opcode == 7
-    process_opcode_8(instruction, p1, p2, p3) if opcode == 8
+    case opcode
+    when 1
+      return process_opcode_1(pointer, instruction, p1, p2, p3)
+    when 2
+      return process_opcode_2(pointer, instruction, p1, p2, p3)
+    when 3
+      return process_opcode_3(pointer, instruction, input)
+    when 4
+      return process_opcode_4(pointer, instruction, p1)
+    when 5
+      return process_opcode_5(pointer, instruction, p1, p2)
+    when 6
+      return process_opcode_6(pointer, instruction, p1, p2)
+    when 7
+      return process_opcode_7(pointer, instruction, p1, p2, p3)
+    when 8
+      return process_opcode_8(pointer, instruction, p1, p2, p3)
+    end
   end
 
-  def step
+  def step(pointer, input)
     code = data_array[pointer]
-    return false if code == 99
+    return 99 if code == 99
     code_hash = interpret(code)
     opcode = code_hash[:opcode]
     l = instruction_length(opcode)
-    instruction = instruction_array(l)
-    process(instruction, code_hash)
+    instruction = instruction_array(pointer, l)
+    process(pointer, instruction, code_hash, input)
   end
 
-  def instruction_array(length)
+  def instruction_array(pointer, length)
     data_array.slice(pointer, length)
   end
 
@@ -217,4 +211,4 @@ class Thrust
   end
 end
 
-# Intcode2.new('./day_5/data/input').run
+# Thrust.new('./day_7/data/input').optimize
