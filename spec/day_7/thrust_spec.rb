@@ -11,19 +11,6 @@ RSpec.describe Thrust do
     end
   end
 
-  describe '#instruction_array' do
-    it 'returns a hash indicating opcode and modes' do
-      expect(thrust.instruction_array(0, 4)).to eq [3, 15, 3, 16]
-    end
-  end
-
-  describe '#interpret' do
-    it 'process the code to an opcode and parameters as a hash' do
-      expect(thrust.interpret(1002)).to include
-        ({ opcode: 2, p1: 0, p2: 1, p3: 0 })
-    end
-  end
-
   describe '#phase_settings_array' do
     it 'turns a number into an array and returns the array or false' do
       expect(thrust.phase_settings_array(1234)).to eq [0, 1, 2, 3, 4]

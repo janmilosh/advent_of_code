@@ -1,4 +1,7 @@
 require 'pry'
+
+require_relative '../intcode_processor.rb'
+
 class Thrust
   attr_accessor :data_array
   attr_reader :data_file
@@ -40,175 +43,19 @@ class Thrust
     input = phase_setting
     pointer = 0
     while true
-      output = step(pointer, input)
-      if output == 99
+      result = IntcodeProcessor.new(pointer, data_array, input).run
+      if result[:output] == 'HALT'
         break
-      elsif output[1] == true
+      elsif result[:output] == true
         input = input_signal
       else
-        output_signal = output[1]
+        output_signal = result[:output]
       end
-      pointer = output[0]
+      pointer = result[:pointer]
+      data_array = result[:data_array]
     end
     output_signal
   end
-
-  def process_opcode_1(pointer, instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
-    value = p1_value + p2_value
-    if p3 == 0
-      data_array[instruction[3]] = value
-    else
-      data_array[pointer + 3] = value
-    end
-    [pointer += instruction.length, false]
-  end
-
-  def process_opcode_2(pointer, instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
-    value = p1_value * p2_value
-    if p3 == 0
-      data_array[instruction[3]] = value
-    else
-      data_array[pointer + 3] = value
-    end
-    [pointer += instruction.length, false]
-  end
-
-  def process_opcode_3(pointer, instruction, input)
-    data_array[instruction[1]] = input
-    [pointer += instruction.length, true]
-  end
-
-  def process_opcode_4(pointer, instruction, p1)
-    if p1 == 0
-      signal = data_array[instruction[1]]
-    else
-      signal = data_array[pointer + 1]
-    end
-    [pointer += instruction.length, signal]
-  end
-
-  def process_opcode_5(pointer, instruction, p1, p2)
-    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
-    if p1_value != 0
-      pointer = p2_value
-    else
-      pointer += instruction.length
-    end
-    [pointer, false]
-  end
-
-  def process_opcode_6(pointer, instruction, p1, p2)
-    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
-    if p1_value == 0
-      pointer = p2_value
-    else
-      pointer += instruction.length
-    end
-    [pointer, false]
-  end
-
-  def process_opcode_7(pointer, instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
-    if p1_value < p2_value
-      value = 1
-    else
-      value = 0
-    end
-    if p3 == 0
-      data_array[instruction[3]] = value
-    else
-      data_array[pointer + 3] = value
-    end
-    [pointer += instruction.length, false]
-  end
-
-  def process_opcode_8(pointer, instruction, p1, p2, p3)
-    p1_value, p2_value = p1_p2_values(pointer, instruction, p1, p2)
-    if p1_value == p2_value
-      value = 1
-    else
-      value = 0
-    end
-    if p3 == 0
-      data_array[instruction[3]] = value
-    else
-      data_array[pointer + 3] = value
-    end
-    [pointer += instruction.length, false]
-  end
-
-  def p1_p2_values(pointer, instruction, p1, p2)
-    if p1 == 0
-      p1_value = data_array[instruction[1]]
-    else
-      p1_value = data_array[pointer + 1]
-    end
-    if p2 == 0
-      p2_value = data_array[instruction[2]]
-    else
-      p2_value = data_array[pointer + 2]
-    end
-    return p1_value, p2_value
-  end
-
-  def process(pointer, instruction, code_hash, input)
-    opcode = code_hash[:opcode]
-    p1 = code_hash[:p1]
-    p2 = code_hash[:p2]
-    p3 = code_hash[:p3]
-
-    case opcode
-    when 1
-      return process_opcode_1(pointer, instruction, p1, p2, p3)
-    when 2
-      return process_opcode_2(pointer, instruction, p1, p2, p3)
-    when 3
-      return process_opcode_3(pointer, instruction, input)
-    when 4
-      return process_opcode_4(pointer, instruction, p1)
-    when 5
-      return process_opcode_5(pointer, instruction, p1, p2)
-    when 6
-      return process_opcode_6(pointer, instruction, p1, p2)
-    when 7
-      return process_opcode_7(pointer, instruction, p1, p2, p3)
-    when 8
-      return process_opcode_8(pointer, instruction, p1, p2, p3)
-    end
-  end
-
-  def step(pointer, input)
-    code = data_array[pointer]
-    return 99 if code == 99
-    code_hash = interpret(code)
-    opcode = code_hash[:opcode]
-    l = instruction_length(opcode)
-    instruction = instruction_array(pointer, l)
-    process(pointer, instruction, code_hash, input)
-  end
-
-  def instruction_array(pointer, length)
-    data_array.slice(pointer, length)
-  end
-
-  def instruction_length(opcode)
-    return 2 if opcode == 3
-    return 2 if opcode == 4
-    return 3 if opcode == 5
-    return 3 if opcode == 6
-    return 4
-  end
-
-  def interpret(code)
-    code = code.to_s.rjust(5, '0')
-    { opcode: code[3..4].to_i,
-      p1: code[2].to_i,
-      p2: code[1].to_i,
-      p3: code[0].to_i
-    }
-  end
 end
 
-# Thrust.new('./day_7/data/input').optimize
+Thrust.new('./day_7/data/input').optimize
